@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Colors of Emotion — Data & Visuals</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#f7f6f3; --card:#ffffff; --muted:#6b6b6b; --accent1:#ffd166; --accent2:#06d6a0; --accent3:#ef476f; --accent4:#118ab2;
+    }
+    *{box-sizing:border-box}
+    body{font-family:'Montserrat',system-ui,Segoe UI,Arial;background:var(--bg);color:#222;margin:0;padding:28px}
+    .container{max-width:980px;margin:0 auto}
+    header{display:flex;gap:16px;align-items:center;margin-bottom:18px}
+    .logo{width:64px;height:64px;background:linear-gradient(135deg,var(--accent4),var(--accent2));border-radius:12px;display:flex;align-items:center;justify-content:center;color:white;font-weight:700}
+    h1{margin:0;font-size:20px}
+    p.lead{margin:6px 0 0;color:var(--muted)}
+    .card{background:var(--card);border-radius:12px;padding:18px;box-shadow:0 6px 18px rgba(10,10,10,0.06);margin-bottom:18px}
+    table{width:100%;border-collapse:collapse;font-size:14px}
+    th,td{padding:8px 10px;text-align:center;border-bottom:1px solid #f0efe9}
+    thead th{background:linear-gradient(90deg,#fff9e6,#fff);font-weight:600}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    canvas{width:100% !important;height:320px !important}
+    .note{font-size:13px;color:var(--muted);margin-top:8px}
+    .inference{background:#f9f9f7;padding:12px;border-radius:8px;margin-top:10px;color:#222}
+    @media(max-width:820px){.grid{grid-template-columns:1fr} canvas{height:260px !important}}
+  </style>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">CE</div>
+      <div>
+        <h1>Colors of Emotion — Data & Visuals</h1>
+        <p class="lead">Dataset of 20 participants & two charts with short inferences. Copy this file and open in a browser to view the live visuals.</p>
+      </div>
+    </header>
+
+    <section class="card">
+      <h3>Dataset — Emotion Intensity (1–10) for 20 Participants</h3>
+      <div style="overflow:auto;margin-top:12px">
+        <table aria-label="emotion-data-table">
+          <thead>
+            <tr>
+              <th>Participant</th><th>Happiness</th><th>Sadness</th><th>Anger</th><th>Surprise</th><th>Calmness</th>
+            </tr>
+          </thead>
+          <tbody id="data-table-body">
+            <!-- rows injected by JS -->
+          </tbody>
+        </table>
+      </div>
+      <p class="note">The table above is the source dataset used to build the two charts below.</p>
+    </section>
+
+    <div class="grid">
+      <div class="card">
+        <h3>Chart 1 — Average Emotional Spectrum (Bar Chart)</h3>
+        <canvas id="avgBar"></canvas>
+        <div class="inference" id="inference1">
+          <!-- inference injected by JS -->
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Chart 2 — Emotion Trends Across Participants (Line Chart)</h3>
+        <canvas id="trendLines"></canvas>
+        <div class="inference" id="inference2">
+          <!-- inference injected by JS -->
+        </div>
+      </div>
+    </div>
+
+    <footer style="text-align:center;margin-top:18px;color:var(--muted)">
+      <small>Created for a blog project — feel free to edit colors, fonts, and text. Visuals generated from the dataset.</small>
+    </footer>
+  </div>
+
+  <script>
+    // Dataset as JS array of objects
+    const data = [
+      {id:'P1', Happiness:8, Sadness:3, Anger:2, Surprise:4, Calmness:7},
+      {id:'P2', Happiness:7, Sadness:4, Anger:3, Surprise:5, Calmness:6},
+      {id:'P3', Happiness:9, Sadness:2, Anger:1, Surprise:3, Calmness:8},
+      {id:'P4', Happiness:6, Sadness:5, Anger:3, Surprise:4, Calmness:7},
+      {id:'P5', Happiness:8, Sadness:4, Anger:2, Surprise:5, Calmness:9},
+      {id:'P6', Happiness:9, Sadness:3, Anger:2, Surprise:6, Calmness:10},
+      {id:'P7', Happiness:7, Sadness:4, Anger:2, Surprise:5, Calmness:8},
+      {id:'P8', Happiness:10, Sadness:2, Anger:1, Surprise:7, Calmness:9},
+      {id:'P9', Happiness:6, Sadness:5, Anger:3, Surprise:4, Calmness:6},
+      {id:'P10', Happiness:8, Sadness:3, Anger:2, Surprise:5, Calmness:8},
+      {id:'P11', Happiness:7, Sadness:4, Anger:3, Surprise:4, Calmness:7},
+      {id:'P12', Happiness:9, Sadness:2, Anger:1, Surprise:6, Calmness:9},
+      {id:'P13', Happiness:8, Sadness:3, Anger:2, Surprise:5, Calmness:8},
+      {id:'P14', Happiness:6, Sadness:4, Anger:3, Surprise:4, Calmness:6},
+      {id:'P15', Happiness:7, Sadness:5, Anger:4, Surprise:3, Calmness:7},
+      {id:'P16', Happiness:9, Sadness:3, Anger:2, Surprise:6, Calmness:10},
+      {id:'P17', Happiness:8, Sadness:4, Anger:3, Surprise:5, Calmness:8},
+      {id:'P18', Happiness:10, Sadness:2, Anger:1, Surprise:7, Calmness:9},
+      {id:'P19', Happiness:7, Sadness:3, Anger:2, Surprise:4, Calmness:7},
+      {id:'P20', Happiness:8, Sadness:4, Anger:2, Surprise:5, Calmness:8},
+    ];
+
+    // populate table
+    const tbody = document.getElementById('data-table-body');
+    data.forEach(r => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${r.id}</td><td>${r.Happiness}</td><td>${r.Sadness}</td><td>${r.Anger}</td><td>${r.Surprise}</td><td>${r.Calmness}</td>`;
+      tbody.appendChild(tr);
+    });
+
+    // compute averages
+    const emotions = ['Happiness','Sadness','Anger','Surprise','Calmness'];
+    const averages = {};
+    emotions.forEach(e=>{
+      averages[e] = (data.reduce((s,r)=>s + r[e],0)/data.length).toFixed(2);
+    });
+
+    // Chart 1: Average bar chart
+    const ctx1 = document.getElementById('avgBar').getContext('2d');
+    const avgBar = new Chart(ctx1, {
+      type: 'bar',
+      data: {
+        labels: emotions,
+        datasets: [{
+          label: 'Average Intensity',
+          data: emotions.map(e=>averages[e]),
+          backgroundColor: ['#ffd166','#ef476f','#f4a261','#06d6a0','#118ab2'],
+          borderRadius: 8,
+          barThickness: 36
+        }]
+      },
+      options: {
+        responsive:true,
+        plugins:{legend:{display:false}},
+        scales:{y:{beginAtZero:true, max:10}}
+      }
+    });
+
+    // Chart 2: Line chart across participants for each emotion
+    const ctx2 = document.getElementById('trendLines').getContext('2d');
+    const labels = data.map(d=>d.id);
+    const series = emotions.map((e,i)=>({
+      label:e,
+      data:data.map(d=>d[e]),
+      tension:0.25,
+      borderWidth:2,
+      pointRadius:2,
+      fill:false,
+      borderColor:['#ffd166','#ef476f','#f4a261','#06d6a0','#118ab2'][i]
+    }));
+
+    const trendChart = new Chart(ctx2,{type:'line',data:{labels, datasets:series}, options:{responsive:true, plugins:{legend:{position:'bottom'}}, scales:{y:{beginAtZero:true, max:10}}}});
+
+    // Inferences (short 2-3 sentences each)
+    document.getElementById('inference1').innerHTML = `
+      <strong>Inference:</strong>
+      <p>The bar chart shows that <em>Calmness</em> and <em>Happiness</em> have the highest average intensities (≈ ${averages['Calmness']} and ${averages['Happiness']} respectively), while <em>Anger</em> is the lowest (≈ ${averages['Anger']}). This suggests the sample group tends toward positive, calm moods overall. The differences are clear and can guide further investigation about what activities or contexts correlate with higher calmness/happiness.`;
+
+    document.getElementById('inference2').innerHTML = `
+      <strong>Inference:</strong>
+      <p>The trend chart shows consistent patterns across participants: <em>Happiness</em> and <em>Calmness</em> track at higher levels for most participants, while <em>Anger</em> stays low with occasional spikes. Noticeable peaks in <em>Surprise</em> coincide with some participants having very high Happiness — indicating moments that raised both excitement and joy for those individuals. Overall, the chart highlights both between-person variability and the dominant positive-emotion trend in this sample.`;
+  </script>
+</body>
+</html>
